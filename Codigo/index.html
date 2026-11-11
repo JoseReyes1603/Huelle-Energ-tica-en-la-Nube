@@ -1,1 +1,295 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Huella energetica de la nube</title>
+  <style>
+    :root {
+      --bosque: #1f4d3a;
+      --hoja: #2e7d57;
+      --brote: #8cc63f;
+      --menta: #e8f5ec;
+      --tierra: #6b5b45;
+      --texto: #1c2b24;
+      --blanco: #ffffff;
+      --error: #b3261e;
+    }
 
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+      background: linear-gradient(160deg, #dff0e4 0%, #f4faf5 45%, #e6f0dc 100%);
+      color: var(--texto);
+      min-height: 100vh;
+      line-height: 1.5;
+      padding: 24px 16px 48px;
+    }
+
+    .contenedor { max-width: 860px; margin: 0 auto; }
+
+    header {
+      background: linear-gradient(135deg, var(--bosque), var(--hoja));
+      color: var(--blanco);
+      border-radius: 20px;
+      padding: 32px 28px;
+      box-shadow: 0 10px 30px rgba(31, 77, 58, 0.25);
+      position: relative;
+      overflow: hidden;
+    }
+
+    header::after {
+      content: "";
+      position: absolute;
+      right: -40px; top: -40px;
+      width: 180px; height: 180px;
+      border-radius: 50%;
+      background: rgba(140, 198, 63, 0.25);
+    }
+
+    header h1 {
+      font-size: clamp(1.6rem, 4vw, 2.3rem);
+      margin-bottom: 10px;
+      position: relative;
+      z-index: 1;
+    }
+
+    header p {
+      font-size: 1.02rem;
+      opacity: 0.95;
+      max-width: 620px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .tarjeta {
+      background: var(--blanco);
+      border-radius: 20px;
+      padding: 28px;
+      margin-top: 24px;
+      box-shadow: 0 6px 20px rgba(31, 77, 58, 0.10);
+      border-top: 6px solid var(--brote);
+    }
+
+    .tarjeta h2 {
+      color: var(--bosque);
+      font-size: 1.25rem;
+      margin-bottom: 18px;
+    }
+
+    .campos {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 18px 22px;
+    }
+
+    .campo { display: flex; flex-direction: column; }
+
+    .campo label {
+      font-weight: 600;
+      font-size: 0.95rem;
+      color: var(--bosque);
+      margin-bottom: 4px;
+    }
+
+    .campo small {
+      color: var(--tierra);
+      font-size: 0.82rem;
+      margin-bottom: 6px;
+    }
+
+    .campo input {
+      padding: 11px 14px;
+      font-size: 1rem;
+      border: 2px solid #cfe3d5;
+      border-radius: 12px;
+      background: var(--menta);
+      color: var(--texto);
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    .campo input:focus {
+      outline: none;
+      border-color: var(--hoja);
+      background: var(--blanco);
+    }
+
+    #btnCalcular {
+      margin-top: 26px;
+      width: 100%;
+      padding: 15px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--blanco);
+      background: linear-gradient(135deg, var(--hoja), var(--bosque));
+      border: none;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s, opacity 0.2s;
+      box-shadow: 0 6px 16px rgba(46, 125, 87, 0.35);
+    }
+
+    #btnCalcular:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 22px rgba(46, 125, 87, 0.45);
+    }
+
+    #btnCalcular:disabled { opacity: 0.6; cursor: wait; }
+
+    #resultado {
+      display: none;
+      margin-top: 24px;
+      padding: 22px;
+      border-radius: 16px;
+      background: var(--menta);
+      border-left: 6px solid var(--hoja);
+      white-space: pre-line;
+      font-size: 1rem;
+      color: var(--texto);
+    }
+
+    #resultado.visible { display: block; }
+
+    #resultado.cargando {
+      color: var(--hoja);
+      font-weight: 600;
+      font-style: italic;
+    }
+
+    #resultado.error {
+      background: #fdecea;
+      border-left-color: var(--error);
+      color: var(--error);
+      font-weight: 600;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 28px;
+      color: var(--tierra);
+      font-size: 0.85rem;
+    }
+
+    @media (max-width: 640px) {
+      body { padding: 16px 12px 36px; }
+      header { padding: 24px 20px; }
+      .tarjeta { padding: 20px; }
+      .campos { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="contenedor">
+    <header>
+      <h1>🌿 Huella energetica de la nube</h1>
+      <p>Cada accion digital (ver un video, escuchar musica, guardar fotos o preguntarle algo a una IA) se procesa en centros de datos que consumen energia y agua. Esta pagina estima tu huella.</p>
+    </header>
+
+    <section class="tarjeta">
+      <h2>Tu uso digital</h2>
+      <form id="formHuella">
+        <div class="campos">
+          <div class="campo">
+            <label for="video">🎬 Video en streaming</label>
+            <small>Horas al dia (YouTube, Netflix, TikTok)</small>
+            <input type="number" id="video" name="video" min="0" step="0.1" value="0" required>
+          </div>
+          <div class="campo">
+            <label for="musica">🎵 Musica en streaming</label>
+            <small>Horas al dia</small>
+            <input type="number" id="musica" name="musica" min="0" step="0.1" value="0" required>
+          </div>
+          <div class="campo">
+            <label for="redes">📱 Redes sociales</label>
+            <small>Horas al dia</small>
+            <input type="number" id="redes" name="redes" min="0" step="0.1" value="0" required>
+          </div>
+          <div class="campo">
+            <label for="videollamadas">💻 Videollamadas</label>
+            <small>Horas a la semana</small>
+            <input type="number" id="videollamadas" name="videollamadas" min="0" step="0.1" value="0" required>
+          </div>
+          <div class="campo">
+            <label for="juegos">🎮 Juegos en linea</label>
+            <small>Horas al dia</small>
+            <input type="number" id="juegos" name="juegos" min="0" step="0.1" value="0" required>
+          </div>
+          <div class="campo">
+            <label for="nube">☁️ Almacenamiento en la nube</label>
+            <small>GB guardados (fotos, archivos)</small>
+            <input type="number" id="nube" name="nube" min="0" step="0.1" value="0" required>
+          </div>
+          <div class="campo">
+            <label for="ia">🤖 Chatbots de IA</label>
+            <small>Consultas al dia</small>
+            <input type="number" id="ia" name="ia" min="0" step="1" value="0" required>
+          </div>
+          <div class="campo">
+            <label for="correos">✉️ Correos enviados</label>
+            <small>Correos al dia</small>
+            <input type="number" id="correos" name="correos" min="0" step="1" value="0" required>
+          </div>
+        </div>
+
+        <button type="submit" id="btnCalcular">Calcular mi huella</button>
+      </form>
+
+      <div id="resultado"></div>
+    </section>
+
+    <footer>Desarrollo Sustentable · Externalizacion e internalizacion de costos</footer>
+  </div>
+
+  <script>
+    // PEGA AQUI LA URL DE TU WEBHOOK DE MAKE (Webhooks > Custom webhook > Copy address to clipboard)
+    const WEBHOOK_URL = "https://hook.us2.make.com/ab7xnummb8vyz5e3k5o0djf9oxvkbfct";
+
+    const CAMPOS = ["video", "musica", "redes", "videollamadas", "juegos", "nube", "ia", "correos"];
+    const form = document.getElementById("formHuella");
+    const boton = document.getElementById("btnCalcular");
+    const resultado = document.getElementById("resultado");
+
+    function mostrar(texto, clase) {
+      resultado.className = "visible" + (clase ? " " + clase : "");
+      resultado.textContent = texto;
+    }
+
+    form.addEventListener("submit", async function (evento) {
+      evento.preventDefault();
+
+      if (!form.reportValidity()) return;
+
+      const datos = new URLSearchParams();
+      CAMPOS.forEach(function (campo) {
+        const valor = document.getElementById(campo).value;
+        datos.append(campo, valor === "" ? "0" : valor);
+      });
+
+      boton.disabled = true;
+      boton.textContent = "Calculando...";
+      mostrar("Calculando...", "cargando");
+
+      try {
+        const respuesta = await fetch(WEBHOOK_URL, {
+          method: "POST",
+          body: datos
+        });
+
+        if (!respuesta.ok) throw new Error("HTTP " + respuesta.status);
+
+        const texto = await respuesta.text();
+        if (!texto.trim()) throw new Error("Respuesta vacia");
+
+        mostrar(texto);
+      } catch (error) {
+        console.error(error);
+        mostrar("No se pudo calcular, intenta de nuevo.", "error");
+      } finally {
+        boton.disabled = false;
+        boton.textContent = "Calcular mi huella";
+      }
+    });
+  </script>
+</body>
+</html>

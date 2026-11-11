@@ -1,6 +1,6 @@
 # Huella Energtica en la Nube
 ## Codigo
-[Ver codigo](blueprint_huella.json)
+[Ver codigo](Codigo/blueprint_huella.json)
 ## Imagenes
 ## Video
 [Ver video en Youtube]()
